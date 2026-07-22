@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "jupyterlite-html-exporter",
+  "description": "jupyterlite-html-exporter settings.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

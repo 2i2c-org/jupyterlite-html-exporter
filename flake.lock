@@ -1,0 +1,51 @@
+{
+  "nodes": {
+    "dev-python": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "dir": "python",
+        "lastModified": 1772621537,
+        "narHash": "sha256-/jBAYzRIRkXwykuNrIUqvh6HzWEiMwc+WBswuO5MB94=",
+        "owner": "agoose77",
+        "repo": "dev-flakes",
+        "rev": "45e941722640b75cb55af326151c8a9af52f598b",
+        "type": "github"
+      },
+      "original": {
+        "dir": "python",
+        "owner": "agoose77",
+        "ref": "v10",
+        "repo": "dev-flakes",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1784497964,
+        "narHash": "sha256-vlHUuqAcbcH2RKmHbPiuQzbv1pnzzavXnI62RD0bqCU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "241313f4e8e508cb9b13278c2b0fa25b9ca27163",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "dev-python": "dev-python",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
