@@ -104,7 +104,16 @@
     "jupyterlab": {
         "extension": true,
         "outputDir": "jupyterlite_html_exporter/labextension",
-        "schemaDir": "schema"
+        "schemaDir": "schema",
+        "webpackConfig": "./webpack.config.js",
+        "sharedPackages": {
+            "@jupyterlite/services": {
+                "bundled": true,
+                "singleton": true,
+                "version": "0.0.0",
+                "requiredVersion": false
+            }
+        }
     },
     "prettier": {
         "singleQuote": true,
