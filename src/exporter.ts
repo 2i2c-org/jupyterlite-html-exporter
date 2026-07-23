@@ -1,11 +1,24 @@
 import { Contents } from '@jupyterlab/services';
 import { IExporter } from '@jupyterlite/services';
+import rehypeStringify from 'rehype-stringify';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import { unified } from 'unified';
 
 export class HTMLExporter implements IExporter {
   /**
    * The MIME type of the exported format.
    */
   readonly mimeType = 'text/html';
+
+  private async _markdownToHTML(markdown: string): Promise<string> {
+    const file = await unified()
+      .use(remarkParse)
+      .use(remarkRehype)
+      .use(rehypeStringify)
+      .process(markdown);
+    return String(file);
+  }
 
   /**
    * Export a notebook to Markdown format.
@@ -14,37 +27,34 @@ export class HTMLExporter implements IExporter {
    * @param path The path to the notebook
    */
   async export(model: Contents.IModel, path: string): Promise<void> {
-    const content = this._convertToMarkdown(model.content);
-    const filename = path.replace(/\.ipynb$/, '.md');
+    const content = await this._convertToMarkdown(model.content);
+    const filename = path.replace(/\.ipynb$/, '.html');
     this.triggerDownload(content, this.mimeType, filename);
   }
 
   /**
    * Convert notebook content to Markdown.
    */
-  private _convertToMarkdown(notebook: any): string {
+  private async _convertToMarkdown(notebook: any): Promise<string> {
     const lines: string[] = [];
-    //const cells = notebook.cells || [];
+    const cells = notebook.cells || [];
 
-    /**
     for (const cell of cells) {
       const source = Array.isArray(cell.source)
         ? cell.source.join('')
         : cell.source;
 
-      if (cell.cell_type === 'markdown' || cell.cell_type === 'raw') {
+      if (cell.cell_type === 'markdown') {
+        lines.push(await this._markdownToHTML(source));
+      } else if (cell.cell_type === 'raw') {
         lines.push(source);
       } else if (cell.cell_type === 'code') {
-              lines.push(
-          '```' + (notebook.metadata?.language_info?.name || 'python')
-        );
-        lines.push(source);
-        lines.push('```');
-        
+        const lang = notebook.metadata?.language_info?.name || 'python';
+        const codeBlock = `\`\`\`${lang}\n${source}\n\`\`\``;
+        lines.push(await this._markdownToHTML(codeBlock));
       }
       lines.push(''); // blank line between cells
     }
-      */
 
     return lines.join('\n');
   }
