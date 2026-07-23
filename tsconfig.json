@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "incremental": true,
     "jsx": "react",
-    "lib": ["DOM", "ES2018", "ES2020.Intl"],
+    "lib": ["DOM", "ES2023", "ES2023.Intl", "ESNext.Disposable"],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,
@@ -18,8 +18,7 @@
     "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,
-    "target": "ES2018",
+    "target": "ES2023",
     "types": ["jest"]
   },
-  "include": ["src/*"]
-}
+  "include": ["src/*"]}
