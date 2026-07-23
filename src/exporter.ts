@@ -1,5 +1,6 @@
 import { Contents } from '@jupyterlab/services';
 import { IExporter } from '@jupyterlite/services';
+import rehypeShiki from '@shikijs/rehype';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
@@ -15,6 +16,13 @@ export class HTMLExporter implements IExporter {
     const file = await unified()
       .use(remarkParse)
       .use(remarkRehype)
+      .use(rehypeShiki, {
+        // or `theme` for a single theme
+        themes: {
+          light: 'vitesse-light',
+          dark: 'vitesse-dark'
+        }
+      })
       .use(rehypeStringify)
       .process(markdown);
     return String(file);
