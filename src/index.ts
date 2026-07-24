@@ -1,3 +1,4 @@
-import { exporterPlugin } from './plugin';
+import { exporterPlugin } from './exporterPlugin';
+import { settingsPlugin } from './settingsPlugin';
 
-export default [exporterPlugin];
+export default [exporterPlugin, settingsPlugin];

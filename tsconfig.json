@@ -8,7 +8,7 @@
     "jsx": "react",
     "lib": ["DOM", "ES2023", "ES2023.Intl", "ESNext.Disposable"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
@@ -21,4 +21,5 @@
     "target": "ES2023",
     "types": ["jest"]
   },
-  "include": ["src/*"]}
+  "include": ["src/*"]
+}

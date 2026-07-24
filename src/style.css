@@ -1,0 +1,100 @@
+.cell {
+  display: grid;
+  grid-column: left / right;
+}
+
+.cell-markdown,
+.cell-raw {
+  grid-column: cell / right-gutter;
+}
+
+.cell-code {
+  grid-template-columns: subgrid;
+
+  & .execution-count {
+    grid-column: left-gutter;
+
+    padding: 0.5em 0.5em;
+    font-family: monospace;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    color: var(--execution-count-color);
+  }
+
+  & .input-area {
+    display: grid;
+    grid-column: left / right;
+    grid-template-columns: subgrid;
+
+    padding-bottom: 0.5em;
+
+    & .input-source {
+      overflow-x: scroll;
+      border: 1px solid grey;
+      padding: 0em 0.5em;
+      grid-column: cell / right-gutter;
+    }
+  }
+
+  & .output-area {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: left / right;
+
+    & .output-collection {
+      grid-column: cell / right-gutter;
+      overflow-x: scroll;
+    }
+  }
+}
+
+.output pre {
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.stream-error {
+  background-color: var(--error-color-bg);
+}
+.notebook {
+  display: grid;
+  row-gap: 1em;
+
+  /*   Default mode ÃÂ¢ÃÂÃÂ maximise content, no margins */
+  grid-template-columns:
+    [left left-gutter] var(--gutter-width)
+    [cell] 1fr [right-gutter] var(--gutter-width) [right-spacer right];
+
+  @media (min-width: 768px) {
+    --nb-cell-size: 768px;
+
+    /*   Margin mode ÃÂ¢ÃÂÃÂ shrink margins between breakpoints */
+    grid-template-columns:
+      [left] 1fr [left-gutter] var(--gutter-width)
+      [cell] calc(var(--nb-cell-size) - 2 * var(--gutter-width))
+      [right-gutter] var(--gutter-width) [right-spacer] 1fr [right];
+  }
+  @media (min-width: 992px) {
+    --nb-cell-size: 992px;
+  }
+  @media (min-width: 1200px) {
+    --nb-cell-size: 1200px;
+  }
+}
+body {
+  font-size: var(--font-size);
+  font-family: var(--font-family);
+}
+:root {
+  /*   Out [10] */
+  --gutter-width: 8em;
+  /* Colors */
+  --error-background: #ffdddd;
+  --execution-count-color: #616161;
+  /* Fonts */
+  --font-family: var('Helvetica Neue', Helvetica, Arial, sans-serif);
+  --font-size: 14px;
+}

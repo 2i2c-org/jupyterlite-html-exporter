@@ -1,11 +1,13 @@
 import { ServiceManagerPlugin } from '@jupyterlab/services';
 import { INbConvertExporters } from '@jupyterlite/services';
 
+export const PLUGIN_ID = 'jupyterlite-html-exporter:html-exporter';
+
 /**
  * Plugin to register custom exporters.
  */
 export const exporterPlugin: ServiceManagerPlugin<void> = {
-  id: 'jupyterlite-html-exporter:html-exporter',
+  id: PLUGIN_ID,
   description: 'Exporter for Jupyter Notebooks to HTML.',
   autoStart: true,
   optional: [INbConvertExporters],
