@@ -1,0 +1,7 @@
+overrides:
+  'lib0': '0.2.111'
+  'webpack': '5.106.0'
+allowBuilds:
+  '@fortawesome/fontawesome-free': true
+## 25200 minutes = 2.5 weeks
+minimumReleaseAge: 25200
