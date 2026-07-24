@@ -18,6 +18,9 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
@@ -27,7 +30,7 @@ jobs:
       - name: Install extension
         run: |
           set -eux
-          pnpm
+          pnpm ci
           python -m pip install .
 
       - uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@v1
