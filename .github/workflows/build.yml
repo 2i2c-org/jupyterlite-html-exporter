@@ -30,7 +30,7 @@ jobs:
     - name: Lint the extension
       run: |
         set -eux
-        pnpm
+        pnpm ci
         pnpm run lint:check
 
     - name: Test the extension
