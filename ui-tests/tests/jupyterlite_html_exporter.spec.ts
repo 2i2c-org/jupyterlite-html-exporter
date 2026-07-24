@@ -16,8 +16,6 @@ test('should emit an activation console message', async ({ page }) => {
   await page.goto();
 
   expect(
-    logs.filter(
-      s => s === 'JupyterLab extension jupyterlite-html-exporter is activated!'
-    )
+    logs.filter(s => s === 'Custom HTML exporter loading...')
   ).toHaveLength(1);
 });

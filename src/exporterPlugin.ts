@@ -15,13 +15,13 @@ export const exporterPlugin: ServiceManagerPlugin<void> = {
     _: null,
     exporters: INbConvertExporters | null
   ): Promise<void> => {
+    console.log('Custom HTML exporter loading...');
     if (exporters === null) {
       return;
     }
     // Register the custom exporter
     const { HTMLExporter } = await import('./exporter');
     exporters.register('HTML', new HTMLExporter());
-
     console.log('Custom HTML exporter registered');
   }
 };
