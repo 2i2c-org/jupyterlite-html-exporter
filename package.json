@@ -165,5 +165,6 @@
             "selector-no-vendor-prefix": null,
             "value-no-vendor-prefix": null
         }
-    }
+    },
+    "packageManager": "pnpm@11"
 }
