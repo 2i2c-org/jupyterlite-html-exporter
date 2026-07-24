@@ -1,7 +1,7 @@
 import { ServiceManagerPlugin } from '@jupyterlab/services';
 import { INbConvertExporters } from '@jupyterlite/services';
 
-export const PLUGIN_ID = 'jupyterlite-html-exporter:html-exporter';
+export const PLUGIN_ID = 'jupyterlite-html-exporter:exporter';
 
 /**
  * Plugin to register custom exporters.

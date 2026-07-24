@@ -14,7 +14,11 @@ import { Contents } from '@jupyterlab/services';
 import { IExporter } from '@jupyterlite/services';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
+import rehypeMathjax from 'rehype-mathjax';
+import remarkMath from 'remark-math';
 import { unified } from 'unified';
 import init, { Environment } from 'minijinja-js/dist/web';
 
@@ -28,6 +32,9 @@ import bashLang from '@shikijs/langs/bash';
 import vitessLight from '@shikijs/themes/vitesse-light';
 import vitessDark from '@shikijs/themes/vitesse-dark';
 import sanitizeHtml from 'sanitize-html';
+
+import { htmlExportSettings, type IHTMLExportSettings } from './settings';
+import defaultTemplate from '@/template.html.j2';
 
 function mapToObject(obj: Map<string, any>): any {
   const result: any = {};
@@ -59,7 +66,11 @@ function buildProcessor(
 ) {
   return unified()
     .use(remarkParse)
-    .use(remarkRehype)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeMathjax)
     .use(rehypeShikiFromHighlighter, highlighter as any, highlighterConfig)
     .use(rehypeStringify);
 }
@@ -68,7 +79,10 @@ function createDataURI(mimeType: string, content: string): string {
   return `data:${mimeType};base64,${encodeURIComponent(content)}`;
 }
 
-function buildEnvironment(lang: string): Environment {
+function buildEnvironment(
+  lang: string,
+  settings: IHTMLExportSettings
+): Environment {
   const highlighterConfig: HighlighterConfig = {
     themes: {
       light: 'vitesse-light',
@@ -97,8 +111,7 @@ function buildEnvironment(lang: string): Environment {
         const contents = data[mimeType] as string;
 
         const url = createDataURI(mimeType, contents);
-        const { width, height } = metadata;
-        console.log({ url, sanitized: sanitizeHtml(url) });
+        const { width, height } = (metadata[mimeType] ?? {}) as any;
         return `<img src="${sanitizeHtml(url)}" width="${sanitizeHtml(String(width ?? ''))}" height="${sanitizeHtml(String(height ?? ''))}"/>`;
       }
     }
@@ -138,44 +151,32 @@ function buildEnvironment(lang: string): Environment {
   env.addFilter('render_output', outputToHTML);
   env.addFilter('render_output', outputToHTML);
   env.addFilter('ensure_str', ensureString);
+
+  let hasNotebook = false;
+  for (const { name, source } of settings.templates) {
+    env.addTemplate(name, source);
+    if (name === 'index') {
+      hasNotebook = true;
+    }
+  }
+
+  env.addTemplate('base', defaultTemplate);
+  if (!hasNotebook) {
+    env.addTemplate('index', `{% extends "base" %}`);
+  }
   return env;
 }
 
-const TEMPLATE = `
-<div class="notebook">
-{% for cell in notebook.cells %}
-<div class="cell cell-{{ cell.cell_type }}">
-{% if cell.cell_type == "code" %}
-<div class="input-area">
-<span class="execution-count">In [{{ cell.execution_count or " "}}]</span>
-<div class="input-source">
-{{ cell.source | ensure_str | render_code }}
-</div>
-</div>
-<div class="output-area">
-<span class="execution-count">Out [{{ cell.execution_count or " "}}]</span>
-
-<div class="output-collection">
-{% for output in cell.outputs %}
-<div class="output">{{ output | render_output }}</div>
-{% endfor %}
-</div>
-</div>
-{% elif cell.cell_type == "markdown" %}
-{{ cell.source | ensure_str | render_markdown }}
-{% elif cell.cell_type == "raw" %}
-{{ cell.source | ensure_str }}
-{% endif %}
-</div>
-{% endfor %}
-</div>
-`;
-async function exportHTML(notebook: INotebookContent): Promise<string> {
+async function exportHTML(
+  notebook: INotebookContent,
+  settings: IHTMLExportSettings
+): Promise<string> {
   await init();
-  console.dir(notebook, { depth: null });
-  const lang = notebook.metadata?.language_info?.name || 'python';
-  const env = buildEnvironment(lang);
-  return env.renderStr(TEMPLATE, { notebook });
+  const lang = (
+    notebook.metadata?.language_info?.name || 'python'
+  ).toLowerCase();
+  const env = buildEnvironment(lang, settings);
+  return env.renderTemplate('index', { notebook });
 }
 
 export class HTMLExporter implements IExporter {
@@ -191,7 +192,8 @@ export class HTMLExporter implements IExporter {
    * @param path The path to the notebook
    */
   async export(model: Contents.IModel, path: string): Promise<void> {
-    const content = await exportHTML(model.content);
+    console.dir(model);
+    const content = await exportHTML(model.content, htmlExportSettings.current);
     const filename = path.replace(/\.ipynb$/, '.html');
     this.triggerDownload(content, this.mimeType, filename);
   }

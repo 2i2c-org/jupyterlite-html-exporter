@@ -1,3 +1,10 @@
+<!doctype html>
+<html>
+{% block head %}
+<head>
+{% block style %}
+<style>
+
 .cell {
   display: grid;
   grid-column: left / right;
@@ -98,3 +105,50 @@ body {
   --font-family: var('Helvetica Neue', Helvetica, Arial, sans-serif);
   --font-size: 14px;
 }
+
+</style>
+{% endblock %}
+</head>
+{% endblock %}
+
+{% block body %}
+<body>
+<div class="notebook">
+{% for cell in notebook.cells %}
+{% block cell %}
+<div class="cell cell-{{ cell.cell_type }}">
+{% if cell.cell_type == "code" %}
+{% block code_cell %}
+<div class="input-area">
+<span class="execution-count">In [{{ cell.execution_count or " "}}]</span>
+<div class="input-source">
+{{ cell.source | ensure_str | render_code }}
+</div>
+</div>
+<div class="output-area">
+<span class="execution-count">Out [{{ cell.execution_count or " "}}]</span>
+
+<div class="output-collection">
+{% for output in cell.outputs %}
+<div class="output">{{ output | render_output }}</div>
+{% endfor %}
+</div>
+</div>
+{% endblock %}
+{% elif cell.cell_type == "markdown" %}
+{% block markdown_cell %}
+{{ cell.source | ensure_str | render_markdown }}
+{% endblock %}
+{% elif cell.cell_type == "raw" %}
+{% block raw_cell %}
+{{ cell.source | ensure_str }}
+{% endblock %}
+{% endif %}
+</div>
+{% endblock %}
+{% endfor %}
+</div>
+</body>
+{% endblock %}
+</html>
+

@@ -1,0 +1,24 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "JupyterLite HTML Exporter",
+  "description": "Settings for the JupyterLite HTML Exporter.",
+  "type": "object",
+  "properties": {
+    "templates": {
+      "title": "Templates",
+      "description": "Array of extra templates to define",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "required": ["name", "source"]
+      },
+      "default": []
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

@@ -1,9 +1,11 @@
 export interface IHTMLExportSettings {
-  style: string | null;
-  extraStyle: string | null;
+  templates: {
+    name: string;
+    source: string;
+  }[];
 }
 
-const DEFAULT_SETTINGS: IHTMLExportSettings = { style: null, extraStyle: null };
+const DEFAULT_SETTINGS: IHTMLExportSettings = { templates: [] };
 
 class HTMLExportSettings {
   get current(): IHTMLExportSettings {
@@ -12,8 +14,7 @@ class HTMLExportSettings {
 
   update(raw: Partial<IHTMLExportSettings> | null | undefined): void {
     this._current = {
-      style: raw?.style ?? null,
-      extraStyle: raw?.extraStyle ?? null
+      templates: raw?.templates ?? []
     };
   }
   private _current: IHTMLExportSettings = DEFAULT_SETTINGS;
