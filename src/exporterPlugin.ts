@@ -20,6 +20,7 @@ export const exporterPlugin: ServiceManagerPlugin<void> = {
       return;
     }
     // Register the custom exporter
+    // Import lazily, so that JupyterLab does not trigger this pathway
     const { HTMLExporter } = await import('./exporter');
     exporters.register('HTML', new HTMLExporter());
     console.log('Custom HTML exporter registered');

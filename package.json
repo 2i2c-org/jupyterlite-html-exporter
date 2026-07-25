@@ -58,6 +58,7 @@
     },
     "dependencies": {
         "@jupyterlab/application": "^4.6.0",
+        "@lumino/coreutils": "^2.0.0",
         "@jupyterlab/nbformat": "^4.6.1",
         "@jupyterlab/services": "^7.6.0",
         "@jupyterlab/settingregistry": "^4.6.0",

@@ -1,9 +1,4 @@
-import type {
-  INotebookContent,
-  IOutput,
-  OutputMetadata,
-  IMimeBundle
-} from '@jupyterlab/nbformat';
+import type { INotebookContent, IOutput } from '@jupyterlab/nbformat';
 import {
   isExecuteResult,
   isDisplayData,
@@ -34,149 +29,126 @@ import vitessDark from '@shikijs/themes/vitesse-dark';
 import sanitizeHtml from 'sanitize-html';
 
 import { htmlExportSettings, type IHTMLExportSettings } from './settings';
+import { mimeRendererFactories } from './mimeRenderers';
 import defaultTemplate from '@/template.html.j2';
 
-function mapToObject(obj: Map<string, any>): any {
-  const result: any = {};
-  for (const [key, value] of obj.entries()) {
-    if (value instanceof Map) {
-      result[key] = mapToObject(value);
-    } else {
-      result[key] = value;
-    }
-  }
-
-  return result;
-}
-function buildHighlighter(): HighlighterCore {
-  return createHighlighterCoreSync({
-    themes: [vitessDark, vitessLight],
-    langs: [rLang, pyLang, bashLang, jsLang],
-    engine: createJavaScriptRegexEngine()
-  });
-}
-
-type HighlighterConfig = {
-  themes: Record<string, string>;
-};
-
-function buildProcessor(
-  highlighter: HighlighterCore,
-  highlighterConfig: HighlighterConfig
-) {
-  return unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkMath)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw)
-    .use(rehypeMathjax)
-    .use(rehypeShikiFromHighlighter, highlighter as any, highlighterConfig)
-    .use(rehypeStringify);
-}
-
-function createDataURI(mimeType: string, content: string): string {
-  return `data:${mimeType};base64,${encodeURIComponent(content)}`;
-}
-
-function buildEnvironment(
-  lang: string,
-  settings: IHTMLExportSettings
-): Environment {
-  const highlighterConfig: HighlighterConfig = {
-    themes: {
-      light: 'vitesse-light',
-      dark: 'vitesse-dark'
-    }
-  };
-  const highlighter = buildHighlighter();
-  const processor = buildProcessor(highlighter, highlighterConfig);
-  const env = new Environment();
-
-  function codeToHTML(source: string): string {
-    const markdown = `\`\`\`${lang}\n${source}\n\`\`\``;
-    return String(processor.processSync(markdown));
-  }
-
-  function markdownToHTML(source: string): string {
-    return String(processor.processSync(source));
-  }
-
-  function mimeToHTML(data: IMimeBundle, metadata: OutputMetadata) {
-    if ('text/html' in data) {
-      return ensureString(data['text/html'] as string | string[]);
-    }
-    for (const mimeType of ['image/png', 'image/jpeg']) {
-      if (mimeType in data) {
-        const contents = data[mimeType] as string;
-
-        const url = createDataURI(mimeType, contents);
-        const { width, height } = (metadata[mimeType] ?? {}) as any;
-        return `<img src="${sanitizeHtml(url)}" width="${sanitizeHtml(String(width ?? ''))}" height="${sanitizeHtml(String(height ?? ''))}"/>`;
+namespace Private {
+  /**
+   * Convert from a recursive Map structure to plain JS objects
+   *
+   * These Maps are produced by minijinja-js
+   */
+  function mapToObject(obj: Map<string, any>): any {
+    const result: any = {};
+    for (const [key, value] of obj.entries()) {
+      if (value instanceof Map) {
+        result[key] = mapToObject(value);
+      } else {
+        result[key] = value;
       }
     }
-    if ('text/plain' in data) {
-      return sanitizeHtml(
-        ensureString(data['text/plain'] as string | string[])
-      );
-    }
-    throw new Error();
+
+    return result;
   }
-
-  function outputToHTML(_output: any): string {
-    const output = mapToObject(_output) as IOutput;
-
-    if (isExecuteResult(output) || isDisplayData(output)) {
-      return mimeToHTML(output.data, output.metadata);
-    } else if (isError(output)) {
-      const rawTraceback = output.traceback.join('\n');
-      const traceback = highlighter.codeToHtml(rawTraceback, {
-        lang: 'ansi',
-        ...highlighterConfig
-      });
-      return `<pre class="output-error stream-error">${traceback}</pre>`;
-    } else if (isStream(output)) {
-      const stream = ensureString(output.text);
-      return `<pre class="output-stream stream-${output.name}">${sanitizeHtml(stream)}</pre>`;
-    }
-    throw new Error();
+  function buildHighlighter(): HighlighterCore {
+    return createHighlighterCoreSync({
+      themes: [vitessDark, vitessLight],
+      langs: [rLang, pyLang, bashLang, jsLang],
+      engine: createJavaScriptRegexEngine()
+    });
   }
 
   function ensureString(source: string | string[]): string {
     return Array.isArray(source) ? source.join('') : source;
   }
 
-  env.addFilter('render_code', codeToHTML);
-  env.addFilter('render_markdown', markdownToHTML);
-  env.addFilter('render_output', outputToHTML);
-  env.addFilter('render_output', outputToHTML);
-  env.addFilter('ensure_str', ensureString);
+  type HighlighterConfig = {
+    themes: Record<string, string>;
+  };
 
-  let hasNotebook = false;
-  for (const { name, source } of settings.templates) {
-    env.addTemplate(name, source);
-    if (name === 'index') {
-      hasNotebook = true;
+  function buildProcessor(
+    highlighter: HighlighterCore,
+    highlighterConfig: HighlighterConfig
+  ) {
+    return unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkMath)
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeRaw)
+      .use(rehypeMathjax)
+      .use(rehypeShikiFromHighlighter, highlighter as any, highlighterConfig)
+      .use(rehypeStringify);
+  }
+
+  export async function renderNotebook(
+    notebook: INotebookContent,
+    settings: IHTMLExportSettings
+  ): Promise<string> {
+    await init();
+
+    const lang = (
+      notebook.metadata?.language_info?.name || 'python'
+    ).toLowerCase();
+
+    const highlighterConfig: HighlighterConfig = {
+      themes: {
+        light: 'vitesse-light',
+        dark: 'vitesse-dark'
+      }
+    };
+    const highlighter = buildHighlighter();
+    const processor = buildProcessor(highlighter, highlighterConfig);
+    const env = new Environment();
+
+    env.addFilter('render_code', (source: string) =>
+      String(processor.processSync(`\`\`\`${lang}\n${source}\n\`\`\``))
+    );
+    env.addFilter('render_markdown', (source: string) =>
+      String(processor.processSync(source))
+    );
+    env.addFilter('render_output', (_output: any) => {
+      const output = mapToObject(_output) as IOutput;
+
+      if (isExecuteResult(output) || isDisplayData(output)) {
+        const renderer = mimeRendererFactories.createPreferredRenderer(
+          Object.keys(output.data)
+        );
+        if (renderer === undefined) {
+          throw new Error();
+        }
+        return renderer(output.data, output.metadata);
+      } else if (isError(output)) {
+        const rawTraceback = output.traceback.join('\n');
+        const traceback = highlighter.codeToHtml(rawTraceback, {
+          lang: 'ansi',
+          ...highlighterConfig
+        });
+        return `<pre class="output-error stream-error">${traceback}</pre>`;
+      } else if (isStream(output)) {
+        const stream = ensureString(output.text);
+        return `<pre class="output-stream stream-${output.name}">${sanitizeHtml(stream)}</pre>`;
+      }
+      throw new Error();
+    });
+
+    env.addFilter('ensure_str', ensureString);
+
+    const templates = new Map<string, string>();
+    templates.set('index', `{% extends "base" %}`);
+    templates.set('base', defaultTemplate);
+
+    // Register user templates, permitting them to clobber the built-in one.
+    for (const { name, source } of settings.templates) {
+      templates.set(name, source);
     }
-  }
 
-  env.addTemplate('base', defaultTemplate);
-  if (!hasNotebook) {
-    env.addTemplate('index', `{% extends "base" %}`);
+    // Write templates to env
+    for (const [name, source] of templates.entries()) {
+      env.addTemplate(name, source);
+    }
+    return env.renderTemplate('index', { notebook });
   }
-  return env;
-}
-
-async function exportHTML(
-  notebook: INotebookContent,
-  settings: IHTMLExportSettings
-): Promise<string> {
-  await init();
-  const lang = (
-    notebook.metadata?.language_info?.name || 'python'
-  ).toLowerCase();
-  const env = buildEnvironment(lang, settings);
-  return env.renderTemplate('index', { notebook });
 }
 
 export class HTMLExporter implements IExporter {
@@ -185,6 +157,8 @@ export class HTMLExporter implements IExporter {
    */
   readonly mimeType = 'text/html';
 
+  constructor() {}
+
   /**
    * Export a notebook to Markdown format.
    *
@@ -192,8 +166,9 @@ export class HTMLExporter implements IExporter {
    * @param path The path to the notebook
    */
   async export(model: Contents.IModel, path: string): Promise<void> {
-    console.dir(model);
-    const content = await exportHTML(model.content, htmlExportSettings.current);
+    const notebook = model.content;
+    const settings = htmlExportSettings.current;
+    const content = await Private.renderNotebook(notebook, settings);
     const filename = path.replace(/\.ipynb$/, '.html');
     this.triggerDownload(content, this.mimeType, filename);
   }
