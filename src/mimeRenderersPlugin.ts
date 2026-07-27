@@ -17,9 +17,7 @@ export const mimeRenderersPlugin: JupyterFrontEndPlugin<IMIMERendererFactories> 
     description: 'Registry for HTML MIME renderers.',
     autoStart: true,
     provides: IMIMERendererFactories,
-    activate: async (
-      app: JupyterFrontEnd
-    ): Promise<IMIMERendererFactories> => {
+    activate: async (app: JupyterFrontEnd): Promise<IMIMERendererFactories> => {
       return mimeRendererFactories;
     }
   };
