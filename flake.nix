@@ -41,6 +41,7 @@
             # Infra packages
             nodejs_22
             pnpm
+            mystmd
           ]);
         # Unset these unwanted env vars
         # PYTHONPATH bleeds from Nix Python packages

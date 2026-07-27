@@ -2,7 +2,7 @@
 
 [![Github Actions Status](https://github.com/2i2c-org/jupyterlite-html-exporter/workflows/Build/badge.svg)](https://github.com/2i2c-org/jupyterlite-html-exporter/actions/workflows/build.yml)
 
-A JupyterLab extension.
+A JupyterLab extension to facilitate exporting Jupyter Notebooks via HTML.
 
 ## Requirements
 
